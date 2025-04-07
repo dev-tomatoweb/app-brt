@@ -1,0 +1,30 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { ruolo: 'admin' }) %>
+
+<div class="container mt-5">
+    <h2>Richiesta Reso - Ordine #<%= ordine.id %></h2>
+    <p><strong>Cliente:</strong> <%= ordine.billing.first_name %> <%=
+        ordine.billing.last_name %></p>
+
+    <form method="POST" action="/api/richiesta-reso">
+        <input type="hidden" name="ordineId" value="<%= ordine.id %>">
+
+        <div class="mb-3">
+            <label>Seleziona i prodotti da rendere:</label>
+            <% ordine.line_items.forEach(item => { %>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                    name="lineItems[]" value="<%= item.id %>"
+                    id="item-<%= item.id %>">
+                <label class="form-check-label" for="item-<%= item.id %>">
+                    <%= item.name %> (qty: <%= item.quantity %>)
+                </label>
+            </div>
+            <% }) %>
+        </div>
+
+        <button type="submit" class="btn btn-success">Invia Richiesta
+            Reso</button>
+        <a href="/admin" class="btn btn-secondary">Annulla</a>
+    </form>
+</div>

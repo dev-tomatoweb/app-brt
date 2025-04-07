@@ -1,0 +1,38 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { ruolo }) %>
+
+<div class="container mt-5">
+  <h2>I tuoi ordini (<%= email %>)</h2>
+
+  <% if (ordini.length === 0) { %>
+    <div class="alert alert-warning mt-4">Nessun ordine trovato.</div>
+  <% } else { %>
+    <table class="table table-bordered mt-4">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Data</th>
+          <th>Totale</th>
+          <th>Stato</th>
+          <th>Reso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% ordini.forEach(o => { %>
+          <tr>
+            <td><%= o.id %></td>
+            <td><%= new Date(o.date_created).toLocaleDateString() %></td>
+            <td><%= o.total %>€</td>
+            <td><span class="badge bg-info"><%= o.status %></span></td>
+            <td>
+              <a href="/cliente/reso/<%= o.id %>" class="btn btn-sm btn-warning">Richiedi Reso</a>
+            </td>            
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+</body>
+</html>
