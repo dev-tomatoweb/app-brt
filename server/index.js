@@ -269,7 +269,6 @@ async function chiamaBRT(dati) {
     },
     createData: {
       departureDepot: process.env.BRT_DEPOT,
-      pricingConditionCod: process.env.PRICING_CONDITION_CODE,
       senderCustomerCode: process.env.SENDER_CUSTOMER_CODE,
       deliveryFreightTypeCode: "DAP",
       consigneeCompanyName: `${dati.nome} ${dati.cognome}`,
