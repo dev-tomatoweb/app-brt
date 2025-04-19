@@ -1,0 +1,16 @@
+{
+    "context": {
+      "description": "Progetto backend sviluppato con Node.js ed Express. Integra WooCommerce tramite API REST e gestisce le spedizioni di reso tramite API Bartolini. Le richieste di reso vengono salvate in un file JSON locale (`/data/resi.json`) usando il modulo `fs`, senza l'utilizzo di database esterni.",
+      "technologies": ["nodejs", "express", "axios", "dotenv", "pdfkit", "fs"],
+      "goals": [
+        "Recuperare gli ordini da WooCommerce tramite REST API",
+        "Effettuare la richiesta di reso a Bartolini tramite chiamata API",
+        "Generare l'etichetta di reso in formato PDF",
+        "Gestire l'accesso admin e mostrare la dashboard degli ordini",
+        "Salvare le richieste di reso in modo persistente in un file JSON locale"
+      ],
+      "level": "expert"
+    },
+    "entryPoint": "server.js"
+  }
+  

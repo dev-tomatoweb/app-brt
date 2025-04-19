@@ -1,31 +1,115 @@
-<%- include('../partials/head', { title }) %>
+<%- include('../partials/head', { title: 'TheFlexx - Richiesta Reso' }) %>
 <%- include('../partials/navbar', { ruolo: 'cliente' }) %>
 
 <div class="container mt-5">
-    <h2>Richiesta Reso - Ordine #<%= ordine.id %></h2>
-    <p><strong>Cliente:</strong> <%= ordine.billing.first_name %> <%=
-        ordine.billing.last_name %></p>
+  <!-- Logo -->
+  <div class="text-center mb-4">
+    <img src="https://theflexx.com/wp-content/uploads/2025/02/the_flexx_logo_new_bw-1.png" alt="TheFlexx Logo" style="max-width: 180px; height: auto;">
+  </div>
 
-    <form method="POST" action="/api/richiesta-reso">
+  <div class="card">
+    <div class="card-header">
+      <h4>Richiesta Reso - Ordine #<%= ordine.id %></h4>
+    </div>
+    <div class="card-body">
+      <form id="resoForm" method="POST" action="/api/richiesta-reso">
         <input type="hidden" name="ordineId" value="<%= ordine.id %>">
         <input type="hidden" name="email" value="<%= email %>">
 
-        <div class="mb-3">
-            <label>Seleziona i prodotti da rendere:</label>
-            <% ordine.line_items.forEach(item => { %>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                    name="lineItems[]" value="<%= item.id %>"
-                    id="item-<%= item.id %>">
-                <label class="form-check-label" for="item-<%= item.id %>">
-                    <%= item.name %> (qty: <%= item.quantity %>)
-                </label>
-            </div>
-            <% }) %>
+        <div class="mb-4">
+          <h5>Seleziona i prodotti da restituire:</h5>
+          <div class="list-group">
+            <% ordine.line_items.forEach((item, index) => { %>
+              <div class="list-group-item">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                         name="lineItems[<%= index %>][selected]" 
+                         id="product<%= index %>"
+                         value="true">
+                  <label class="form-check-label" for="product<%= index %>">
+                    <strong><%= item.name %></strong>
+                    <% if (item.sku) { %>
+                      <br><small class="text-muted">SKU: <%= item.sku %></small>
+                    <% } %>
+                    <br><small class="text-muted">Quantità acquistata: <%= item.quantity %></small>
+                  </label>
+                </div>
+                <div class="mt-2 ps-4" id="quantityDiv<%= index %>" style="display: none;">
+                  <label class="form-label">Quantità da restituire:</label>
+                  <select class="form-select form-select-sm w-auto" 
+                          name="lineItems[<%= index %>][quantity]">
+                    <% for(let i = 1; i <= item.quantity; i++) { %>
+                      <option value="<%= i %>"><%= i %></option>
+                    <% } %>
+                  </select>
+                  <input type="hidden" name="lineItems[<%= index %>][name]" value="<%= item.name %>">
+                  <input type="hidden" name="lineItems[<%= index %>][sku]" value="<%= item.sku %>">
+                </div>
+              </div>
+            <% }); %>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-success">Invia Richiesta
-            Reso</button>
-        <a href="/cliente" class="btn btn-secondary">Annulla</a>
-    </form>
+        <div class="mb-3">
+          <label class="form-label">Motivo del reso:</label>
+          <select class="form-select" name="motivo" required>
+            <option value="">Seleziona un motivo...</option>
+            <option value="taglia_errata">Taglia errata</option>
+            <option value="articolo_difettoso">Articolo difettoso</option>
+            <option value="non_corrisponde">Non corrisponde alla descrizione</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Note aggiuntive:</label>
+          <textarea class="form-control" name="note" rows="3" placeholder="Inserisci eventuali note..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <a href="/cliente" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Torna agli ordini
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Invia richiesta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Font Awesome -->
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Mostra/nascondi selettore quantità quando il checkbox viene cliccato
+  document.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+    checkbox.addEventListener('change', (e) => {
+      const quantityDiv = document.getElementById(`quantityDiv${index}`);
+      quantityDiv.style.display = e.target.checked ? 'block' : 'none';
+    });
+  });
+
+  // Validazione form
+  document.getElementById('resoForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Verifica che almeno un prodotto sia selezionato
+    const selectedProducts = document.querySelectorAll('input[type="checkbox"]:checked');
+    if (selectedProducts.length === 0) {
+      alert('Seleziona almeno un prodotto da restituire');
+      return;
+    }
+
+    // Procedi con l'invio
+    e.target.submit();
+  });
+});
+</script>
+
+</body>
+</html>

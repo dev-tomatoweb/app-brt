@@ -2,73 +2,118 @@
 <%- include('../partials/navbar', { ruolo }) %>
 
 <div class="container mt-5">
+  <!-- Logo -->
+  <div class="text-center mb-4">
+    <img src="https://theflexx.com/wp-content/uploads/2025/02/the_flexx_logo_new_bw-1.png" alt="TheFlexx Logo" style="max-width: 180px; height: auto;">
+  </div>
 
   <!-- TABS -->
   <ul class="nav nav-tabs" id="adminTabs" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" id="ordini-tab" data-bs-toggle="tab" href="#ordini" role="tab">Ordini</a>
+      <a class="nav-link active" id="ordini-tab" data-bs-toggle="tab" href="#ordini" role="tab">
+        <i class="fas fa-shopping-cart"></i> Ordini
+      </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" id="reso-tab" data-bs-toggle="tab" href="#reso" role="tab">Richieste Reso</a>
+      <a class="nav-link" id="reso-tab" data-bs-toggle="tab" href="#reso" role="tab">
+        <i class="fas fa-undo"></i> Richieste Reso
+      </a>
     </li>
   </ul>
 
-  <div class="tab-content mt-3">
-
+  <div class="tab-content mt-4">
     <!-- TABELLA ORDINI -->
     <div class="tab-pane fade show active" id="ordini" role="tabpanel">
+      <!-- Filtri -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <form id="filtriForm" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Data inizio</label>
+              <input type="date" class="form-control" name="dataInizio" value="<%= filtri.dataInizio %>">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Data fine</label>
+              <input type="date" class="form-control" name="dataFine" value="<%= filtri.dataFine %>">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Stato</label>
+              <select class="form-select" name="stato">
+                <option value="all" <%= filtri.stato === 'all' ? 'selected' : '' %>>Tutti</option>
+                <option value="processing" <%= filtri.stato === 'processing' ? 'selected' : '' %>>In lavorazione</option>
+                <option value="completed" <%= filtri.stato === 'completed' ? 'selected' : '' %>>Completati</option>
+                <option value="on-hold" <%= filtri.stato === 'on-hold' ? 'selected' : '' %>>In attesa</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary me-2">
+                <i class="fas fa-filter"></i> Filtra
+              </button>
+              <button type="button" onclick="esportaExcel()" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Esporta Excel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <% if (ordini.length === 0) { %>
-        <div class="alert alert-warning mt-4">Nessun ordine trovato.</div>
+        <div class="alert alert-warning mt-4">
+          <i class="fas fa-exclamation-triangle"></i> Nessun ordine trovato.
+        </div>
       <% } else { %>
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Totale</th>
-              <th>Stato</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% ordini.forEach(o => { %>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
               <tr>
-                <td><%= o.id %></td>
-                <td><%= new Date(o.date_created).toLocaleDateString() %></td>
-                <td><%= o.billing.first_name %> <%= o.billing.last_name %></td>
-                <td><%= o.total %>€</td>
-                <td><span class="badge bg-secondary"><%= o.status %></span></td>
-                <td>
-                  <form method="POST" action="/api/autorizza-reso" target="_blank">
-                    <input type="hidden" name="ordineId" value="<%= o.id %>">
-                    <button type="submit" class="btn btn-sm btn-primary">
-                      Genera Etichetta Reso
-                    </button>
-                  </form>
-                </td>
-                <td>
-                  <form method="POST" action="/api/autorizza-reso" target="_blank" class="mb-1">
-                    <input type="hidden" name="ordineId" value="<%= o.id %>">
-                    <button type="submit" class="btn btn-sm btn-primary">Etichetta</button>
-                  </form>
-                
-                  <a href="/admin/reso/<%= o.id %>" class="btn btn-sm btn-warning">Richiedi Reso</a>
-                </td>                
+                <th>ID</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Totale</th>
+                <th>Stato</th>
+                <th>Azioni</th>
               </tr>
-            <% }) %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% ordini.forEach(o => { %>
+                <tr>
+                  <td>#<%= o.id %></td>
+                  <td><%= new Date(o.date_created).toLocaleDateString() %></td>
+                  <td><%= o.billing.first_name %> <%= o.billing.last_name %></td>
+                  <td><%= o.total %>€</td>
+                  <td>
+                    <span class="badge bg-<%= o.status === 'completed' ? 'success' : 'secondary' %>">
+                      <%= o.status %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <form method="POST" action="/api/autorizza-reso" class="me-2">
+                        <input type="hidden" name="ordineId" value="<%= o.id %>">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                          <i class="fas fa-file-pdf"></i> Etichetta
+                        </button>
+                      </form>
+                      <a href="/admin/reso/<%= o.id %>" class="btn btn-warning btn-sm">
+                        <i class="fas fa-undo"></i> Richiedi Reso
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Paginazione -->
-        <nav aria-label="Pagine">
-          <ul class="pagination">
+        <nav aria-label="Pagine" class="mt-4">
+          <ul class="pagination justify-content-center">
             <% if (page > 1) { %>
               <li class="page-item">
                 <a class="page-link" href="/admin?page=<%= page - 1 %>">« Indietro</a>
               </li>
             <% } %>
-            <li class="page-item">
+            <li class="page-item active">
               <span class="page-link">Pagina <%= page %></span>
             </li>
             <% if (hasMore) { %>
@@ -84,40 +129,191 @@
     <!-- TABELLA RICHIESTE RESO -->
     <div class="tab-pane fade" id="reso" role="tabpanel">
       <% if (richieste.length === 0) { %>
-        <div class="alert alert-secondary">Nessuna richiesta di reso.</div>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> Nessuna richiesta di reso attiva.
+        </div>
       <% } else { %>
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Ordine</th>
-              <th>Email</th>
-              <th>Data richiesta</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% richieste.forEach(r => { %>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
               <tr>
-                <td>#<%= r.ordineId %></td>
-                <td><%= r.email %></td>
-                <td><%= new Date(r.data).toLocaleString() %></td>
-                <td>
-                  <form method="POST" action="/api/autorizza-reso" target="_blank">
-                    <input type="hidden" name="ordineId" value="<%= r.ordineId %>">
-                    <button type="submit" class="btn btn-success btn-sm">Autorizza Reso</button>
-                  </form>
-                </td>
+                <th>Ordine</th>
+                <th>Cliente</th>
+                <th>Prodotti da restituire</th>
+                <th>Motivo</th>
+                <th>Data richiesta</th>
+                <th>Ultima modifica</th>
+                <th>Stato</th>
+                <th>Azioni</th>
               </tr>
-            <% }) %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% richieste.forEach(r => { %>
+                <tr>
+                  <td>
+                    <% if (r.woocommerceUrl) { %>
+                      <a href="<%= r.woocommerceUrl %>" target="_blank" class="text-primary" title="Vedi in WooCommerce">
+                        #<%= r.ordineId %> <i class="fas fa-external-link-alt"></i>
+                      </a>
+                    <% } else { %>
+                      #<%= r.ordineId %>
+                    <% } %>
+                    <% if (r.totale) { %>
+                      <br>
+                      <small class="text-muted">€ <%= r.totale %></small>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (r.cliente) { %>
+                      <strong><%= r.cliente.nome %></strong><br>
+                      <small>
+                        <a href="mailto:<%= r.cliente.email %>" class="text-muted">
+                          <i class="fas fa-envelope"></i> <%= r.cliente.email %>
+                        </a>
+                      </small>
+                      <% if (r.cliente.telefono) { %>
+                        <br>
+                        <small class="text-muted">
+                          <i class="fas fa-phone"></i> <%= r.cliente.telefono %>
+                        </small>
+                      <% } %>
+                    <% } else { %>
+                      <%= r.email %>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (r.prodotti && r.prodotti.length > 0) { %>
+                      <ul class="list-unstyled mb-0">
+                        <% r.prodotti.forEach(p => { %>
+                          <li>
+                            <small>
+                              <strong><%= p.name %></strong>
+                              <% if (p.sku) { %>
+                                <br>SKU: <%= p.sku %>
+                              <% } %>
+                              <br>Quantità: <%= p.quantity %>
+                            </small>
+                          </li>
+                          <% if (r.prodotti.length > 1) { %><hr class="my-1"><% } %>
+                        <% }) %>
+                      </ul>
+                    <% } else { %>
+                      <small class="text-muted">Nessun dettaglio prodotto</small>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (r.motivo) { %>
+                      <strong>
+                        <%= {
+                          'taglia_errata': 'Taglia errata',
+                          'articolo_difettoso': 'Articolo difettoso',
+                          'non_corrisponde': 'Non corrisponde alla descrizione',
+                          'altro': 'Altro'
+                        }[r.motivo] || r.motivo %>
+                      </strong>
+                      <% if (r.note) { %>
+                        <br>
+                        <small class="text-muted">
+                          <i class="fas fa-comment"></i> <%= r.note %>
+                        </small>
+                      <% } %>
+                    <% } else { %>
+                      <small class="text-muted">-</small>
+                    <% } %>
+                  </td>
+                  <td><%= new Date(r.data).toLocaleString() %></td>
+                  <td>
+                    <% if (r.dataGenerazione) { %>
+                      <%= new Date(r.dataGenerazione).toLocaleString() %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= r.stato === 'etichetta_generata' ? 'success' : 'warning' %>">
+                      <%= r.stato === 'etichetta_generata' ? 'Completato' : 'In attesa' %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <form method="POST" action="/api/autorizza-reso" class="me-2">
+                        <input type="hidden" name="ordineId" value="<%= r.ordineId %>">
+                        <button type="submit" class="btn btn-primary btn-sm" title="<%= r.stato === 'etichetta_generata' ? 'Ristampa etichetta' : 'Genera etichetta' %>">
+                          <i class="fas fa-file-pdf"></i> 
+                          <%= r.stato === 'etichetta_generata' ? 'Ristampa' : 'Etichetta' %>
+                        </button>
+                      </form>
+                      <button onclick="eliminaReso('<%= r.ordineId %>')" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Elimina
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
       <% } %>
     </div>
-
   </div>
 </div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Font Awesome -->
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+
+<script>
+async function eliminaReso(ordineId) {
+  if (!confirm('Sei sicuro di voler eliminare questa richiesta di reso?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/elimina-reso', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ordineId })
+    });
+
+    if (response.ok) {
+      // Ricarica la pagina dopo l'eliminazione
+      window.location.reload();
+    } else {
+      alert('Errore durante l\'eliminazione della richiesta');
+    }
+  } catch (error) {
+    console.error('Errore:', error);
+    alert('Errore durante l\'eliminazione della richiesta');
+  }
+}
+
+// Mantieni il tab attivo dopo il refresh
+document.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash;
+  if (hash) {
+    const tab = new bootstrap.Tab(document.querySelector(`a[href="${hash}"]`));
+    tab.show();
+  }
+});
+
+// Gestione filtri
+document.getElementById('filtriForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const params = new URLSearchParams(formData);
+  window.location.href = `/admin?${params.toString()}#ordini`;
+});
+
+// Funzione esportazione Excel
+function esportaExcel() {
+  const formData = new FormData(document.getElementById('filtriForm'));
+  const params = new URLSearchParams(formData);
+  window.location.href = `/api/esporta-ordini?${params.toString()}`;
+}
+</script>
+
 </body>
 </html>
