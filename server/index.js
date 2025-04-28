@@ -461,74 +461,6 @@ app.post('/api/autorizza-reso', checkAuth(['admin']), async (req, res) => {
   }
 });
 
-// === Funzione: chiamata a BRT ===
-async function chiamaBRT(dati) {
-  // Genera codice univoco usando ordineId e timestamp
-  const timestamp = Date.now().toString().slice(-8); // ultimi 8 numeri del timestamp
-  const riferimento = `${dati.senderReference}-${timestamp}`; // formato: ordineId-timestamp
-
-  console.log('📦 Generazione riferimento:', {
-    ordineId: dati.senderReference,
-    timestamp,
-    riferimento
-  });
-
-  const payload = {
-    account: {
-      userID: process.env.BRT_USERID,
-      password: process.env.BRT_PASSWORD
-    },
-    createData: {
-      departureDepot: process.env.BRT_DEPOT,
-      senderCustomerCode: process.env.SENDER_CUSTOMER_CODE,
-      deliveryFreightTypeCode: "DAP",
-      consigneeCompanyName: `${dati.nome} ${dati.cognome}`,
-      consigneeAddress: dati.indirizzo,
-      consigneeZIPCode: dati.cap,
-      consigneeCity: dati.città,
-      consigneeCountryAbbreviationISOAlpha2: "IT",
-      numberOfParcels: 1,
-      weightKG: 1,
-      numericSenderReference: parseInt(dati.senderReference),
-      alphanumericSenderReference: riferimento,
-      isCODMandatory: 0,
-      cashOnDelivery: 0,
-      codCurrency: "EUR",
-      notes: `Reso ordine #${dati.senderReference}`
-    },
-    isLabelRequired: 1,
-    labelParameters: {
-      outputType: "PDF",
-      isBorderRequired: 0,
-      isLogoRequired: 0
-    }
-  };
-
-  console.log('📤 Invio richiesta a BRT con:');
-  console.log('Endpoint:', process.env.BRT_API_URL);
-  console.log('Payload:', JSON.stringify(payload, null, 2));
-
-  try {
-    const response = await axios.post(process.env.BRT_API_URL, payload, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    console.log('📦 Risposta BRT:', JSON.stringify(response.data, null, 2));
-
-    const stream = response.data?.createResponse?.labels?.label?.[0]?.stream;
-
-    if (!stream) {
-      throw new Error('Etichetta non trovata nella risposta BRT');
-    }
-
-    return Buffer.from(stream, 'base64');
-
-  } catch (error) {
-    console.error('❌ Errore chiamata BRT:', error.response?.data || error.message);
-    throw new Error('Errore nella chiamata a BRT');
-  }
-}
-
 // === API: esporta ordini in Excel ===
 app.get('/api/esporta-ordini', checkAuth(['admin', 'magazzino']), async (req, res) => {
   const { dataInizio, dataFine, stato } = req.query;
@@ -774,6 +706,74 @@ app.get('/test-email', async (req, res) => {
     res.status(500).send('Errore nell\'invio dell\'email: ' + error.message);
   }
 });
+
+// === Funzione: chiamata a BRT ===
+async function chiamaBRT(dati) {
+  // Genera codice univoco usando ordineId e timestamp
+  const timestamp = Date.now().toString().slice(-8); // ultimi 8 numeri del timestamp
+  const riferimento = `${dati.senderReference}-${timestamp}`; // formato: ordineId-timestamp
+
+  console.log('📦 Generazione riferimento:', {
+    ordineId: dati.senderReference,
+    timestamp,
+    riferimento
+  });
+
+  const payload = {
+    account: {
+      userID: process.env.BRT_USERID,
+      password: process.env.BRT_PASSWORD
+    },
+    createData: {
+      departureDepot: process.env.BRT_DEPOT,
+      senderCustomerCode: process.env.SENDER_CUSTOMER_CODE,
+      deliveryFreightTypeCode: "DAP",
+      consigneeCompanyName: `${dati.nome} ${dati.cognome}`,
+      consigneeAddress: dati.indirizzo,
+      consigneeZIPCode: dati.cap,
+      consigneeCity: dati.città,
+      consigneeCountryAbbreviationISOAlpha2: "IT",
+      numberOfParcels: 1,
+      weightKG: 1,
+      numericSenderReference: parseInt(dati.senderReference),
+      alphanumericSenderReference: riferimento,
+      isCODMandatory: 0,
+      cashOnDelivery: 0,
+      codCurrency: "EUR",
+      notes: `Reso ordine #${dati.senderReference}`
+    },
+    isLabelRequired: 1,
+    labelParameters: {
+      outputType: "PDF",
+      isBorderRequired: 0,
+      isLogoRequired: 0
+    }
+  };
+
+  console.log('📤 Invio richiesta a BRT con:');
+  console.log('Endpoint:', process.env.BRT_API_URL);
+  console.log('Payload:', JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await axios.post(process.env.BRT_API_URL, payload, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    console.log('📦 Risposta BRT:', JSON.stringify(response.data, null, 2));
+
+    const stream = response.data?.createResponse?.labels?.label?.[0]?.stream;
+
+    if (!stream) {
+      throw new Error('Etichetta non trovata nella risposta BRT');
+    }
+
+    return Buffer.from(stream, 'base64');
+
+  } catch (error) {
+    console.error('❌ Errore chiamata BRT:', error.response?.data || error.message);
+    throw new Error('Errore nella chiamata a BRT');
+  }
+}
 
 // Avvia il server
 const PORT = process.env.PORT || 3000;
